@@ -1,0 +1,77 @@
+# DevOps Automation Standards Configuration
+# These rules are enforced when creating work items.
+
+work_items:
+  # Minimum description length (characters)
+  min_description_length: 20
+
+  # User stories must contain these sections
+  user_story_required_sections:
+    - "As a"
+    - "I want"
+    - "So that"
+
+  # Acceptance criteria must follow Given/When/Then
+  acceptance_criteria_format: "gherkin"  # gherkin | freeform
+
+  # Maximum story points per user story
+  max_story_points: 13
+
+  # Task types allowed
+  task_types:
+    - Development
+    - Testing
+    - Documentation
+    - DevOps
+    - Design
+    - Code Review
+
+  # Definition of Done checklist (appended to every user story)
+  definition_of_done:
+    - "Code reviewed and approved"
+    - "Unit tests written and passing"
+    - "Acceptance criteria met"
+    - "QA test cases created and passing"
+    - "Documentation updated if applicable"
+    - "No critical or high security vulnerabilities"
+    - "PR linked to Azure DevOps work item"
+
+github:
+  # Branch naming pattern: {type}/{ado-id}-{slug}
+  branch_naming_pattern: "{type}/{ado_id}-{slug}"
+  branch_types:
+    - feature
+    - bugfix
+    - hotfix
+    - chore
+    - docs
+
+  # PR title must include ADO work item reference
+  pr_title_pattern: "[#{ado_id}] {title}"
+
+  # Auto-labels to apply on PR creation
+  pr_labels:
+    - "ado-linked"
+
+qa:
+  # Minimum test cases per user story
+  min_test_cases_per_story: 2
+
+  # Test case types to generate
+  test_types:
+    - Happy path
+    - Edge case
+    - Negative / error case
+
+  # Auto-create test plans in Azure DevOps
+  create_test_plans: true
+
+ai:
+  # Model to use (OpenAI model name or Azure OpenAI deployment name)
+  model: "gpt-4o"
+
+  # Temperature for work item generation (lower = more deterministic)
+  temperature: 0.2
+
+  # Maximum tokens per response
+  max_tokens: 4096
