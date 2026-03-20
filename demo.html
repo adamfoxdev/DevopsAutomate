@@ -1,0 +1,1231 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>DevopsAutomate — Automated DevOps Pipeline Demo</title>
+  <style>
+    /* ─── Reset & Variables ─────────────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:          #0d1117;
+      --bg-card:     #161b22;
+      --bg-card2:    #1c2230;
+      --border:      #30363d;
+      --accent:      #58a6ff;
+      --accent2:     #7ee787;
+      --accent3:     #f78166;
+      --accent4:     #d2a8ff;
+      --accent5:     #ffa657;
+      --text:        #c9d1d9;
+      --text-muted:  #8b949e;
+      --badge-bg:    #21262d;
+      --radius:      10px;
+      --radius-lg:   16px;
+      --shadow:      0 4px 24px rgba(0,0,0,0.5);
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      line-height: 1.6;
+      min-height: 100vh;
+    }
+
+    a { color: var(--accent); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    /* ─── Nav ───────────────────────────────────────────────────────── */
+    nav {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: rgba(13,17,23,0.85);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 2rem;
+      height: 56px;
+    }
+
+    .nav-brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-weight: 700;
+      font-size: 1.05rem;
+      color: var(--text);
+    }
+
+    .nav-brand svg { flex-shrink: 0; }
+
+    .nav-links {
+      display: flex;
+      gap: 1.5rem;
+      list-style: none;
+      font-size: 0.9rem;
+    }
+
+    .nav-links a { color: var(--text-muted); }
+    .nav-links a:hover { color: var(--text); text-decoration: none; }
+
+    /* ─── Hero ──────────────────────────────────────────────────────── */
+    .hero {
+      text-align: center;
+      padding: 5rem 1.5rem 4rem;
+      background: radial-gradient(ellipse 80% 50% at 50% -10%, rgba(88,166,255,0.15) 0%, transparent 70%);
+    }
+
+    .hero-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: var(--badge-bg);
+      border: 1px solid var(--border);
+      border-radius: 100px;
+      padding: 4px 14px;
+      font-size: 0.78rem;
+      color: var(--text-muted);
+      margin-bottom: 1.4rem;
+    }
+
+    .hero-badge .dot {
+      width: 7px; height: 7px;
+      background: var(--accent2);
+      border-radius: 50%;
+      animation: pulse 2s ease-in-out infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.5; transform: scale(0.8); }
+    }
+
+    .hero h1 {
+      font-size: clamp(2.2rem, 5vw, 3.6rem);
+      font-weight: 800;
+      letter-spacing: -0.03em;
+      line-height: 1.15;
+      margin-bottom: 1.2rem;
+      background: linear-gradient(135deg, #ffffff 0%, var(--accent) 60%, var(--accent4) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .hero p {
+      max-width: 640px;
+      margin: 0 auto 2.2rem;
+      font-size: 1.15rem;
+      color: var(--text-muted);
+    }
+
+    .hero-actions {
+      display: flex;
+      justify-content: center;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 22px;
+      border-radius: 8px;
+      font-size: 0.95rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: opacity .15s, transform .15s;
+      border: 1px solid transparent;
+    }
+    .btn:hover { opacity: 0.85; transform: translateY(-1px); text-decoration: none; }
+
+    .btn-primary {
+      background: var(--accent);
+      color: #0d1117;
+    }
+
+    .btn-secondary {
+      background: transparent;
+      border-color: var(--border);
+      color: var(--text);
+    }
+
+    /* ─── Section helpers ───────────────────────────────────────────── */
+    section { padding: 5rem 1.5rem; }
+
+    .container { max-width: 1100px; margin: 0 auto; }
+
+    .section-label {
+      display: inline-block;
+      font-size: 0.75rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--accent);
+      margin-bottom: 0.6rem;
+    }
+
+    .section-title {
+      font-size: clamp(1.6rem, 3vw, 2.2rem);
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      margin-bottom: 0.8rem;
+    }
+
+    .section-sub {
+      color: var(--text-muted);
+      max-width: 600px;
+      margin-bottom: 2.8rem;
+    }
+
+    /* ─── Pipeline Flow ─────────────────────────────────────────────── */
+    #pipeline { background: var(--bg-card); border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); }
+
+    .pipeline-wrapper {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: center;
+      gap: 0;
+      margin-top: 2rem;
+    }
+
+    .pipeline-step {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      padding: 1.4rem 1.2rem;
+      width: 140px;
+      opacity: 0;
+      transform: translateY(20px);
+      transition: opacity .5s ease, transform .5s ease;
+    }
+    .pipeline-step.visible { opacity: 1; transform: translateY(0); }
+
+    .step-icon {
+      width: 52px; height: 52px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.5rem;
+      margin-bottom: 0.8rem;
+      border: 1px solid var(--border);
+    }
+
+    .step-title { font-size: 0.85rem; font-weight: 700; margin-bottom: 0.25rem; }
+    .step-desc  { font-size: 0.73rem; color: var(--text-muted); }
+
+    .pipeline-arrow {
+      font-size: 1.3rem;
+      color: var(--border);
+      padding: 0 0.3rem;
+      align-self: center;
+      margin-bottom: 2.2rem;
+    }
+
+    /* ─── Features Grid ─────────────────────────────────────────────── */
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 1.2rem;
+    }
+
+    .feature-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 1.6rem 1.8rem;
+      transition: border-color .2s, transform .2s, box-shadow .2s;
+    }
+    .feature-card:hover {
+      border-color: var(--accent);
+      transform: translateY(-3px);
+      box-shadow: var(--shadow);
+    }
+
+    .feature-icon {
+      font-size: 1.8rem;
+      margin-bottom: 0.8rem;
+      display: block;
+    }
+
+    .feature-card h3 { font-size: 1rem; font-weight: 700; margin-bottom: 0.5rem; }
+    .feature-card p  { font-size: 0.88rem; color: var(--text-muted); }
+
+    /* ─── Interactive Demo ──────────────────────────────────────────── */
+    #demo { background: var(--bg); }
+
+    .demo-layout {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 2rem;
+      align-items: start;
+    }
+
+    @media (max-width: 768px) { .demo-layout { grid-template-columns: 1fr; } }
+
+    .demo-panel {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+    }
+
+    .panel-header {
+      background: var(--bg-card2);
+      border-bottom: 1px solid var(--border);
+      padding: 0.9rem 1.2rem;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.85rem;
+      font-weight: 600;
+    }
+
+    .panel-dot { width: 10px; height: 10px; border-radius: 50%; }
+    .dot-red   { background: #ff5f57; }
+    .dot-yellow{ background: #febc2e; }
+    .dot-green { background: #28c840; }
+
+    .panel-body { padding: 1.4rem; }
+
+    .form-group { margin-bottom: 1.1rem; }
+    .form-group label {
+      display: block;
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      margin-bottom: 0.4rem;
+    }
+    .form-group input,
+    .form-group textarea,
+    .form-group select {
+      width: 100%;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      color: var(--text);
+      font-size: 0.88rem;
+      padding: 0.5rem 0.75rem;
+      resize: vertical;
+      font-family: inherit;
+    }
+    .form-group input:focus,
+    .form-group textarea:focus,
+    .form-group select:focus {
+      outline: none;
+      border-color: var(--accent);
+    }
+    .form-group textarea { min-height: 80px; }
+
+    .priority-row {
+      display: flex;
+      gap: 0.5rem;
+    }
+    .priority-btn {
+      flex: 1;
+      padding: 6px;
+      font-size: 0.78rem;
+      font-weight: 600;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      color: var(--text-muted);
+      cursor: pointer;
+      text-align: center;
+      transition: all .15s;
+    }
+    .priority-btn.active { border-color: var(--accent); color: var(--accent); background: rgba(88,166,255,.1); }
+
+    .run-btn {
+      width: 100%;
+      padding: 11px;
+      background: var(--accent);
+      color: #0d1117;
+      border: none;
+      border-radius: 8px;
+      font-size: 0.95rem;
+      font-weight: 700;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      transition: opacity .15s, transform .15s;
+      margin-top: 0.5rem;
+    }
+    .run-btn:hover { opacity: 0.85; transform: translateY(-1px); }
+    .run-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+    /* ─── Output tree ───────────────────────────────────────────────── */
+    .output-placeholder {
+      text-align: center;
+      color: var(--text-muted);
+      padding: 3rem 1rem;
+      font-size: 0.9rem;
+    }
+
+    .output-placeholder svg { display: block; margin: 0 auto 1rem; opacity: 0.3; }
+
+    .hierarchy-tree { font-size: 0.85rem; }
+
+    .tree-item {
+      margin-bottom: 0.5rem;
+      opacity: 0;
+      transform: translateX(-10px);
+      animation: fadeIn .35s ease forwards;
+    }
+
+    @keyframes fadeIn {
+      to { opacity: 1; transform: translateX(0); }
+    }
+
+    .tree-item .label {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 10px;
+      border-radius: 6px;
+      font-weight: 600;
+      font-size: 0.78rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .label-epic    { background: rgba(210,168,255,0.15); color: var(--accent4); border: 1px solid rgba(210,168,255,.3); }
+    .label-feature { background: rgba(88,166,255,0.12);  color: var(--accent);  border: 1px solid rgba(88,166,255,.3); }
+    .label-story   { background: rgba(126,231,135,0.12); color: var(--accent2); border: 1px solid rgba(126,231,135,.3); }
+    .label-task    { background: rgba(255,166,87,0.12);  color: var(--accent5); border: 1px solid rgba(255,166,87,.3);  }
+    .label-qa      { background: rgba(247,129,102,0.12); color: var(--accent3); border: 1px solid rgba(247,129,102,.3); }
+    .label-github  { background: rgba(139,148,158,0.12); color: #8b949e;        border: 1px solid rgba(139,148,158,.3); }
+
+    .tree-title { font-size: 0.88rem; font-weight: 600; }
+    .tree-meta  { font-size: 0.75rem; color: var(--text-muted); }
+
+    .tree-branch {
+      padding-left: 1.4rem;
+      border-left: 1px solid var(--border);
+      margin-left: 0.5rem;
+      margin-top: 0.4rem;
+    }
+
+    /* ─── Standards ─────────────────────────────────────────────────── */
+    #standards { background: var(--bg-card); border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); }
+
+    .standards-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+      gap: 1.2rem;
+    }
+
+    .standard-card {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1.4rem;
+    }
+
+    .standard-card h4 {
+      font-size: 0.9rem;
+      font-weight: 700;
+      margin-bottom: 0.8rem;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .standard-card ul {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 0.45rem;
+    }
+
+    .standard-card li {
+      font-size: 0.82rem;
+      color: var(--text-muted);
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+    }
+
+    .standard-card li::before {
+      content: "✓";
+      color: var(--accent2);
+      font-weight: 700;
+      flex-shrink: 0;
+      margin-top: 1px;
+    }
+
+    /* ─── Gherkin block ─────────────────────────────────────────────── */
+    .gherkin-block {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-left: 3px solid var(--accent4);
+      border-radius: 8px;
+      padding: 1rem 1.2rem;
+      font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+      font-size: 0.82rem;
+      line-height: 1.8;
+      color: var(--text-muted);
+      margin-top: 1rem;
+    }
+
+    .gherkin-block .kw { color: var(--accent4); font-weight: 700; }
+    .gherkin-block .val { color: var(--accent2); }
+
+    /* ─── CLI section ───────────────────────────────────────────────── */
+    #cli { background: var(--bg); }
+
+    .terminal {
+      background: #010409;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+      box-shadow: var(--shadow);
+    }
+
+    .term-bar {
+      background: var(--bg-card2);
+      border-bottom: 1px solid var(--border);
+      padding: 0.65rem 1rem;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .term-body {
+      padding: 1.4rem 1.6rem;
+      font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+      font-size: 0.83rem;
+      line-height: 2;
+    }
+
+    .term-body .prompt { color: var(--accent2); }
+    .term-body .cmd    { color: var(--text); }
+    .term-body .flag   { color: var(--accent); }
+    .term-body .val    { color: var(--accent5); }
+    .term-body .out    { color: var(--text-muted); }
+    .term-body .ok     { color: var(--accent2); }
+    .term-body .err    { color: var(--accent3); }
+    .term-body .head   { color: var(--accent4); font-weight: 700; }
+
+    /* ─── Progress Steps ────────────────────────────────────────────── */
+    .progress-steps {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+      margin-top: 1.8rem;
+    }
+
+    .progress-step {
+      display: flex;
+      align-items: flex-start;
+      gap: 1rem;
+    }
+
+    .step-num {
+      width: 30px; height: 30px;
+      border-radius: 50%;
+      background: var(--accent);
+      color: #0d1117;
+      font-size: 0.8rem;
+      font-weight: 800;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .progress-step .step-content h4 { font-size: 0.9rem; font-weight: 700; margin-bottom: 0.2rem; }
+    .progress-step .step-content p  { font-size: 0.82rem; color: var(--text-muted); }
+
+    /* ─── Footer ────────────────────────────────────────────────────── */
+    footer {
+      border-top: 1px solid var(--border);
+      padding: 2rem 1.5rem;
+      text-align: center;
+      color: var(--text-muted);
+      font-size: 0.83rem;
+    }
+
+    /* ─── Spinner ───────────────────────────────────────────────────── */
+    .spinner {
+      display: inline-block;
+      width: 16px; height: 16px;
+      border: 2px solid rgba(13,17,23,0.4);
+      border-top-color: #0d1117;
+      border-radius: 50%;
+      animation: spin .7s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ─── Status bar ────────────────────────────────────────────────── */
+    .status-bar {
+      display: flex;
+      gap: 0.6rem;
+      flex-wrap: wrap;
+      margin-top: 1rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .status-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 0.75rem;
+      padding: 3px 10px;
+      border-radius: 100px;
+      font-weight: 600;
+    }
+
+    .pill-blue   { background: rgba(88,166,255,.15);  color: var(--accent);  border: 1px solid rgba(88,166,255,.3); }
+    .pill-green  { background: rgba(126,231,135,.15); color: var(--accent2); border: 1px solid rgba(126,231,135,.3); }
+    .pill-purple { background: rgba(210,168,255,.15); color: var(--accent4); border: 1px solid rgba(210,168,255,.3); }
+    .pill-orange { background: rgba(255,166,87,.15);  color: var(--accent5); border: 1px solid rgba(255,166,87,.3); }
+
+    /* ─── Responsive ─────────────────────────────────────────────────── */
+    @media (max-width: 600px) {
+      .pipeline-arrow { display: none; }
+      .pipeline-step  { width: 110px; }
+      nav .nav-links  { display: none; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ═══ NAV ═══════════════════════════════════════════════════════════ -->
+<nav>
+  <div class="nav-brand">
+    <svg width="22" height="22" viewBox="0 0 22 22" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <rect width="22" height="22" rx="6" fill="#58a6ff" fill-opacity="0.2"/>
+      <path d="M5 11C5 7.686 7.686 5 11 5s6 2.686 6 6-2.686 6-6 6" stroke="#58a6ff" stroke-width="2" stroke-linecap="round"/>
+      <circle cx="11" cy="11" r="2.5" fill="#58a6ff"/>
+    </svg>
+    DevopsAutomate
+  </div>
+  <ul class="nav-links">
+    <li><a href="#pipeline">Pipeline</a></li>
+    <li><a href="#features">Features</a></li>
+    <li><a href="#demo">Live Demo</a></li>
+    <li><a href="#standards">Standards</a></li>
+    <li><a href="#cli">CLI</a></li>
+  </ul>
+</nav>
+
+<!-- ═══ HERO ══════════════════════════════════════════════════════════ -->
+<header class="hero">
+  <div class="hero-badge">
+    <span class="dot"></span>
+    AI-Powered · Azure DevOps · GitHub
+  </div>
+  <h1>Automate Your Entire<br>DevOps Lifecycle</h1>
+  <p>
+    From a single intake request to a fully-created Epic, Features, User Stories,
+    Tasks, QA Test Plans, and GitHub PRs — all enforced against engineering
+    standards, in seconds.
+  </p>
+  <div class="hero-actions">
+    <a href="#demo" class="btn btn-primary">
+      <svg width="16" height="16" fill="none" viewBox="0 0 16 16"><path d="M4 2l8 6-8 6V2z" fill="currentColor"/></svg>
+      Try the Demo
+    </a>
+    <a href="#pipeline" class="btn btn-secondary">
+      <svg width="16" height="16" fill="none" viewBox="0 0 16 16"><circle cx="8" cy="8" r="6.5" stroke="currentColor" stroke-width="1.5"/><path d="M8 5v3.5l2.5 1.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+      See How It Works
+    </a>
+  </div>
+</header>
+
+<!-- ═══ PIPELINE ══════════════════════════════════════════════════════ -->
+<section id="pipeline">
+  <div class="container">
+    <span class="section-label">How it works</span>
+    <h2 class="section-title">End-to-End Automation Pipeline</h2>
+    <p class="section-sub">
+      One command triggers an AI-powered chain that creates a fully structured,
+      standards-compliant work item hierarchy — no manual tickets required.
+    </p>
+
+    <div class="pipeline-wrapper" id="pipelineSteps">
+      <div class="pipeline-step" style="--delay:0s">
+        <div class="step-icon" style="background:rgba(210,168,255,.1); border-color:rgba(210,168,255,.3);">📥</div>
+        <div class="step-title" style="color:var(--accent4)">Intake</div>
+        <div class="step-desc">Stakeholder submits title, description &amp; priority</div>
+      </div>
+      <div class="pipeline-arrow">›</div>
+      <div class="pipeline-step" style="--delay:.1s">
+        <div class="step-icon" style="background:rgba(88,166,255,.1); border-color:rgba(88,166,255,.3);">🤖</div>
+        <div class="step-title" style="color:var(--accent)">AI Decompose</div>
+        <div class="step-desc">GPT-4o breaks work into hierarchical items</div>
+      </div>
+      <div class="pipeline-arrow">›</div>
+      <div class="pipeline-step" style="--delay:.2s">
+        <div class="step-icon" style="background:rgba(255,166,87,.1); border-color:rgba(255,166,87,.3);">🏛️</div>
+        <div class="step-title" style="color:var(--accent5)">Validate</div>
+        <div class="step-desc">Standards enforced: Gherkin AC, point caps, DoD</div>
+      </div>
+      <div class="pipeline-arrow">›</div>
+      <div class="pipeline-step" style="--delay:.3s">
+        <div class="step-icon" style="background:rgba(126,231,135,.1); border-color:rgba(126,231,135,.3);">🔷</div>
+        <div class="step-title" style="color:var(--accent2)">Azure DevOps</div>
+        <div class="step-desc">Work items created with parent-child links</div>
+      </div>
+      <div class="pipeline-arrow">›</div>
+      <div class="pipeline-step" style="--delay:.4s">
+        <div class="step-icon" style="background:rgba(247,129,102,.1); border-color:rgba(247,129,102,.3);">🧪</div>
+        <div class="step-title" style="color:var(--accent3)">QA Plan</div>
+        <div class="step-desc">Test cases &amp; ADO Test Plan per epic</div>
+      </div>
+      <div class="pipeline-arrow">›</div>
+      <div class="pipeline-step" style="--delay:.5s">
+        <div class="step-icon" style="background:rgba(139,148,158,.1); border-color:rgba(139,148,158,.3);">🐙</div>
+        <div class="step-title" style="color:#8b949e">GitHub</div>
+        <div class="step-desc">Feature branches &amp; draft PRs auto-created</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ FEATURES ══════════════════════════════════════════════════════ -->
+<section id="features">
+  <div class="container">
+    <span class="section-label">Capabilities</span>
+    <h2 class="section-title">Everything in One Command</h2>
+    <p class="section-sub">
+      DevopsAutomate handles every step of the delivery workflow so your team
+      can focus on building, not on admin.
+    </p>
+
+    <div class="features-grid">
+      <div class="feature-card">
+        <span class="feature-icon">🤖</span>
+        <h3>AI Decomposition</h3>
+        <p>GPT-4o translates a plain-language intake into a complete
+        Epic → Feature → User Story → Task tree with acceptance criteria and
+        story points.</p>
+      </div>
+      <div class="feature-card">
+        <span class="feature-icon">🔷</span>
+        <h3>Azure DevOps Integration</h3>
+        <p>Every work item is created in your ADO project with correct
+        parent-child links, metadata, priority, and area/iteration paths —
+        via the Azure DevOps SDK.</p>
+      </div>
+      <div class="feature-card">
+        <span class="feature-icon">📐</span>
+        <h3>Standards Enforcement</h3>
+        <p>Validates Gherkin acceptance criteria, story-point caps (max 13),
+        Definition of Done checklist, task types, and branch naming conventions
+        before any items are committed.</p>
+      </div>
+      <div class="feature-card">
+        <span class="feature-icon">🧪</span>
+        <h3>QA Automation</h3>
+        <p>Generates happy-path, edge-case, and negative test cases per user
+        story, then creates a full ADO Test Plan and Test Suites for the epic.</p>
+      </div>
+      <div class="feature-card">
+        <span class="feature-icon">🐙</span>
+        <h3>GitHub Integration</h3>
+        <p>Creates standards-compliant feature branches
+        (<code style="color:var(--accent);font-size:.82em">feature/{ado-id}-{slug}</code>)
+        and draft PRs with a DoD checklist linked back to ADO work items.</p>
+      </div>
+      <div class="feature-card">
+        <span class="feature-icon">⚡</span>
+        <h3>Single CLI Command</h3>
+        <p>One <code style="color:var(--accent);font-size:.82em">devops-automate intake</code>
+        command drives the entire pipeline. Supports dry-run mode, flag
+        overrides, and outputs a portable <code style="color:var(--accent);font-size:.82em">hierarchy.json</code>.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ LIVE DEMO ══════════════════════════════════════════════════════ -->
+<section id="demo">
+  <div class="container">
+    <span class="section-label">Interactive Demo</span>
+    <h2 class="section-title">See It In Action</h2>
+    <p class="section-sub">
+      Fill in an intake request below and click <strong>Run Automation</strong> to
+      see how DevopsAutomate decomposes it into a full work item hierarchy.
+    </p>
+
+    <div class="demo-layout">
+      <!-- Input Panel -->
+      <div class="demo-panel">
+        <div class="panel-header">
+          <div class="panel-dot dot-red"></div>
+          <div class="panel-dot dot-yellow"></div>
+          <div class="panel-dot dot-green"></div>
+          <span style="margin-left:4px">Intake Request</span>
+        </div>
+        <div class="panel-body">
+          <div class="form-group">
+            <label>Title</label>
+            <input id="intakeTitle" type="text" value="Customer Portal Redesign" />
+          </div>
+          <div class="form-group">
+            <label>Description</label>
+            <textarea id="intakeDesc">Redesign the customer-facing portal to improve UX, add SSO login, and reduce support tickets by 30% through self-service features.</textarea>
+          </div>
+          <div class="form-group">
+            <label>Requester</label>
+            <input id="intakeRequester" type="text" value="jane@example.com" />
+          </div>
+          <div class="form-group">
+            <label>Priority</label>
+            <div class="priority-row">
+              <div class="priority-btn" data-p="1">🔴 Critical</div>
+              <div class="priority-btn active" data-p="2">🟠 High</div>
+              <div class="priority-btn" data-p="3">🟡 Medium</div>
+              <div class="priority-btn" data-p="4">🟢 Low</div>
+            </div>
+          </div>
+          <div class="form-group">
+            <label>Tags (comma-separated)</label>
+            <input id="intakeTags" type="text" value="ux, sso, portal" />
+          </div>
+          <button class="run-btn" id="runBtn" onclick="runDemo()">
+            <svg width="15" height="15" fill="none" viewBox="0 0 15 15"><path d="M3 2l9 5.5L3 13V2z" fill="currentColor"/></svg>
+            Run Automation
+          </button>
+        </div>
+      </div>
+
+      <!-- Output Panel -->
+      <div class="demo-panel">
+        <div class="panel-header">
+          <div class="panel-dot dot-red"></div>
+          <div class="panel-dot dot-yellow"></div>
+          <div class="panel-dot dot-green"></div>
+          <span style="margin-left:4px">Generated Hierarchy</span>
+          <span id="statusPills" style="margin-left:auto;display:flex;gap:6px;"></span>
+        </div>
+        <div class="panel-body" id="outputBody">
+          <div class="output-placeholder">
+            <svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M8 12h32M8 20h24M8 28h16" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/>
+              <circle cx="36" cy="32" r="8" stroke="currentColor" stroke-width="2"/>
+              <path d="M33 32l2 2 4-4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+            <p>Enter an intake request and click<br><strong>Run Automation</strong> to generate the hierarchy.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ STANDARDS ═════════════════════════════════════════════════════ -->
+<section id="standards">
+  <div class="container">
+    <span class="section-label">Engineering Standards</span>
+    <h2 class="section-title">Quality Enforced by Default</h2>
+    <p class="section-sub">
+      Every generated work item is validated against configurable rules in
+      <code style="color:var(--accent)">config/standards.yaml</code> before being
+      committed to Azure DevOps.
+    </p>
+
+    <div class="standards-grid">
+      <div class="standard-card">
+        <h4>📋 Work Item Rules</h4>
+        <ul>
+          <li>Minimum 20-character descriptions</li>
+          <li>User stories must contain As a / I want / So that</li>
+          <li>Story point cap of 13 per user story</li>
+          <li>Allowed task types: Development, Testing, Documentation, DevOps, Design, Code Review</li>
+        </ul>
+      </div>
+      <div class="standard-card">
+        <h4>✅ Definition of Done</h4>
+        <ul>
+          <li>Code reviewed and approved</li>
+          <li>Unit tests written and passing</li>
+          <li>Acceptance criteria met</li>
+          <li>QA test cases created and passing</li>
+          <li>Documentation updated if applicable</li>
+          <li>No critical/high security vulnerabilities</li>
+          <li>PR linked to Azure DevOps work item</li>
+        </ul>
+      </div>
+      <div class="standard-card">
+        <h4>🐙 GitHub Standards</h4>
+        <ul>
+          <li>Branch naming: <code style="color:var(--accent);font-size:.85em">{type}/{ado_id}-{slug}</code></li>
+          <li>Types: feature, bugfix, hotfix, chore, docs</li>
+          <li>PR title: <code style="color:var(--accent);font-size:.85em">[#{ado_id}] {title}</code></li>
+          <li>Auto-label: <code style="color:var(--accent);font-size:.85em">ado-linked</code></li>
+        </ul>
+      </div>
+      <div class="standard-card">
+        <h4>🧪 QA Standards</h4>
+        <ul>
+          <li>Minimum 2 test cases per user story</li>
+          <li>Test types: Happy path, Edge case, Negative/error</li>
+          <li>Auto-creates ADO Test Plan &amp; Test Suites</li>
+          <li>Acceptance criteria in Gherkin format</li>
+        </ul>
+
+        <div class="gherkin-block">
+          <span class="kw">Given</span> a customer is on the login page<br>
+          <span class="kw">When</span> they click <span class="val">"Sign in with SSO"</span><br>
+          <span class="kw">Then</span> they are redirected to the IdP<br>
+          <span class="kw">And</span> successfully authenticated
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ CLI ═══════════════════════════════════════════════════════════ -->
+<section id="cli">
+  <div class="container">
+    <span class="section-label">Command-Line Interface</span>
+    <h2 class="section-title">One Command. Full Pipeline.</h2>
+    <p class="section-sub">
+      Install the package and run a single command to drive the entire automation.
+      Every step is logged in real-time.
+    </p>
+
+    <div class="terminal">
+      <div class="term-bar">
+        <div class="panel-dot dot-red"></div>
+        <div class="panel-dot dot-yellow"></div>
+        <div class="panel-dot dot-green"></div>
+        <span style="margin-left:8px;font-size:0.78rem;color:var(--text-muted)">bash</span>
+      </div>
+      <div class="term-body">
+        <div><span class="prompt">$</span> <span class="cmd">devops-automate intake</span> <span class="flag">\</span></div>
+        <div>&nbsp;&nbsp;<span class="flag">--title</span> <span class="val">"Customer Portal Redesign"</span> <span class="flag">\</span></div>
+        <div>&nbsp;&nbsp;<span class="flag">--description</span> <span class="val">"Redesign the portal for improved UX and SSO."</span> <span class="flag">\</span></div>
+        <div>&nbsp;&nbsp;<span class="flag">--requester</span> <span class="val">"jane@example.com"</span> <span class="flag">\</span></div>
+        <div>&nbsp;&nbsp;<span class="flag">--priority</span> <span class="val">2</span></div>
+        <br>
+        <div><span class="out">🤖  Calling AI to decompose intake request...</span></div>
+        <div><span class="ok">✓   Epic decomposed: 2 features, 5 user stories, 14 tasks</span></div>
+        <br>
+        <div><span class="out">📐  Validating against engineering standards...</span></div>
+        <div><span class="ok">✓   All items pass standards validation</span></div>
+        <br>
+        <div><span class="out">🔷  Creating work items in Azure DevOps...</span></div>
+        <div><span class="ok">✓   Epic  #1042  Customer Portal Redesign</span></div>
+        <div><span class="ok">✓   Feature #1043  Authentication &amp; SSO</span></div>
+        <div><span class="ok">✓   Feature #1044  Self-Service Dashboard</span></div>
+        <div><span class="ok">✓   5 User Stories · 14 Tasks created with parent links</span></div>
+        <br>
+        <div><span class="out">🧪  Creating ADO Test Plan...</span></div>
+        <div><span class="ok">✓   Test Plan "CP Redesign QA" created (12 test cases)</span></div>
+        <br>
+        <div><span class="out">🐙  Creating GitHub branches &amp; draft PRs...</span></div>
+        <div><span class="ok">✓   feature/1045-sso-integration  →  Draft PR #87</span></div>
+        <div><span class="ok">✓   feature/1046-self-service-ui  →  Draft PR #88</span></div>
+        <br>
+        <div><span class="ok">✅  Pipeline complete. Hierarchy saved to hierarchy.json</span></div>
+      </div>
+    </div>
+
+    <div class="progress-steps">
+      <div class="progress-step">
+        <div class="step-num">1</div>
+        <div class="step-content">
+          <h4>Install</h4>
+          <p><code style="color:var(--accent)">pip install -e .</code> — installs the CLI and all dependencies.</p>
+        </div>
+      </div>
+      <div class="progress-step">
+        <div class="step-num">2</div>
+        <div class="step-content">
+          <h4>Configure</h4>
+          <p>Copy <code style="color:var(--accent)">.env.example</code> to <code style="color:var(--accent)">.env</code> and set your Azure DevOps, OpenAI, and GitHub credentials.</p>
+        </div>
+      </div>
+      <div class="progress-step">
+        <div class="step-num">3</div>
+        <div class="step-content">
+          <h4>Run</h4>
+          <p><code style="color:var(--accent)">devops-automate intake --title "…" --description "…"</code> and watch the pipeline execute.</p>
+        </div>
+      </div>
+      <div class="progress-step">
+        <div class="step-num">4</div>
+        <div class="step-content">
+          <h4>Review</h4>
+          <p>All work items appear in Azure DevOps, branches are ready in GitHub, and <code style="color:var(--accent)">hierarchy.json</code> captures the full output.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ FOOTER ════════════════════════════════════════════════════════ -->
+<footer>
+  <p>DevopsAutomate &mdash; MIT License &mdash;
+    <a href="https://github.com/adamfoxdev/DevopsAutomate" target="_blank" rel="noopener">
+      View on GitHub
+    </a>
+  </p>
+</footer>
+
+<!-- ═══ SCRIPTS ══════════════════════════════════════════════════════ -->
+<script>
+  /* ── Priority button toggle ─────────────────────────────────── */
+  document.querySelectorAll('.priority-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.priority-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+    });
+  });
+
+  /* ── Intersection observer: pipeline steps ──────────────────── */
+  const pipelineSteps = document.querySelectorAll('.pipeline-step');
+  const observer = new IntersectionObserver(entries => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        const steps = entry.target.querySelectorAll('.pipeline-step');
+        steps.forEach((step, i) => {
+          setTimeout(() => step.classList.add('visible'), i * 120);
+        });
+        observer.unobserve(entry.target);
+      }
+    });
+  }, { threshold: 0.15 });
+
+  const pipelineWrapper = document.getElementById('pipelineSteps');
+  if (pipelineWrapper) observer.observe(pipelineWrapper);
+
+  /* ── Demo runner ────────────────────────────────────────────── */
+  const DEMO_DATA = {
+    "Customer Portal Redesign": {
+      epic: "Customer Portal Redesign",
+      epicId: 1042,
+      features: [
+        {
+          title: "Authentication & SSO",
+          id: 1043,
+          stories: [
+            {
+              title: "As a user, I want SSO login so that I can sign in with my company account",
+              id: 1045, points: 5,
+              branch: "feature/1045-sso-login",
+              tasks: ["Integrate OAuth2 provider", "Build login UI", "Write unit tests"],
+              qa: ["Happy path: SSO login succeeds", "Edge case: expired token", "Negative: invalid credentials"]
+            },
+            {
+              title: "As a user, I want password reset so that I can recover my account",
+              id: 1046, points: 3,
+              branch: "feature/1046-password-reset",
+              tasks: ["Build reset flow", "Send email notification"],
+              qa: ["Happy path: reset email sent", "Negative: unknown email"]
+            }
+          ]
+        },
+        {
+          title: "Self-Service Dashboard",
+          id: 1044,
+          stories: [
+            {
+              title: "As a user, I want a usage dashboard so that I can track my activity",
+              id: 1047, points: 8,
+              branch: "feature/1047-usage-dashboard",
+              tasks: ["Design dashboard layout", "Build API endpoints", "Integrate charts", "Write integration tests"],
+              qa: ["Happy path: data loads correctly", "Edge case: no data", "Negative: API timeout"]
+            }
+          ]
+        }
+      ]
+    }
+  };
+
+  function delay(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+  async function runDemo() {
+    const btn = document.getElementById('runBtn');
+    const output = document.getElementById('outputBody');
+    const pills = document.getElementById('statusPills');
+
+    const title = document.getElementById('intakeTitle').value.trim() || 'Custom Feature';
+    const requester = document.getElementById('intakeRequester').value.trim() || 'user@example.com';
+
+    btn.disabled = true;
+    btn.innerHTML = `<div class="spinner"></div> Processing…`;
+    pills.innerHTML = '';
+    output.innerHTML = `<div class="output-placeholder" style="padding:2rem 1rem;">
+      <div class="spinner" style="width:24px;height:24px;border:3px solid var(--border);border-top-color:var(--accent);margin:0 auto 1rem;"></div>
+      <p>AI decomposing intake request…</p>
+    </div>`;
+
+    await delay(900);
+
+    output.innerHTML = `<div class="output-placeholder" style="padding:2rem 1rem;">
+      <div class="spinner" style="width:24px;height:24px;border:3px solid var(--border);border-top-color:var(--accent2);margin:0 auto 1rem;"></div>
+      <p>Validating against engineering standards…</p>
+    </div>`;
+
+    await delay(700);
+
+    output.innerHTML = `<div class="output-placeholder" style="padding:2rem 1rem;">
+      <div class="spinner" style="width:24px;height:24px;border:3px solid var(--border);border-top-color:var(--accent5);margin:0 auto 1rem;"></div>
+      <p>Creating Azure DevOps work items &amp; GitHub branches…</p>
+    </div>`;
+
+    await delay(800);
+
+    /* pick demo data or generate a generic one */
+    const key = Object.keys(DEMO_DATA).find(k => title.toLowerCase().includes(k.toLowerCase().split(' ')[0]));
+    const data = key ? DEMO_DATA[key] : buildGenericData(title);
+
+    output.innerHTML = '';
+    renderHierarchy(output, data, requester);
+
+    pills.innerHTML = `
+      <span class="status-pill pill-green">✓ Standards</span>
+      <span class="status-pill pill-blue">✓ ADO</span>
+      <span class="status-pill pill-purple">✓ QA Plan</span>
+      <span class="status-pill pill-orange">✓ GitHub</span>
+    `;
+
+    btn.disabled = false;
+    btn.innerHTML = `<svg width="15" height="15" fill="none" viewBox="0 0 15 15"><path d="M3 2l9 5.5L3 13V2z" fill="currentColor"/></svg> Run Automation`;
+  }
+
+  function buildGenericData(title) {
+    const slug = title.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '').slice(0, 20);
+    return {
+      epic: title,
+      epicId: 2001,
+      features: [
+        {
+          title: "Core " + title + " Backend",
+          id: 2002,
+          stories: [
+            {
+              title: `As a developer, I want the ${title} API so that the front-end can integrate`,
+              id: 2003, points: 5,
+              branch: `feature/2003-${slug}-api`,
+              tasks: ["Design API contract", "Implement endpoints", "Write unit tests"],
+              qa: ["Happy path: API returns 200", "Edge case: empty payload", "Negative: unauthorized"]
+            }
+          ]
+        },
+        {
+          title: title + " UI",
+          id: 2004,
+          stories: [
+            {
+              title: `As a user, I want a ${title} interface so that I can interact with the system`,
+              id: 2005, points: 8,
+              branch: `feature/2005-${slug}-ui`,
+              tasks: ["Design wireframes", "Build React components", "Integrate with API", "Accessibility audit"],
+              qa: ["Happy path: UI renders correctly", "Edge case: mobile viewport", "Negative: API error state"]
+            }
+          ]
+        }
+      ]
+    };
+  }
+
+  function renderHierarchy(container, data, requester) {
+    const tree = document.createElement('div');
+    tree.className = 'hierarchy-tree';
+
+    let delay = 0;
+
+    function addItem(parent, html, d) {
+      const el = document.createElement('div');
+      el.className = 'tree-item';
+      el.style.animationDelay = d + 'ms';
+      el.innerHTML = html;
+      parent.appendChild(el);
+    }
+
+    /* Epic */
+    addItem(tree, `
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
+        <span class="label label-epic">Epic #${data.epicId}</span>
+        <span class="tree-title">${data.epic}</span>
+      </div>
+      <div class="tree-meta" style="margin-left:4px;margin-bottom:4px">
+        Requester: ${requester} &nbsp;·&nbsp;
+        ${data.features.reduce((a, f) => a + f.stories.length, 0)} User Stories &nbsp;·&nbsp;
+        ${data.features.reduce((a, f) => a + f.stories.reduce((b, s) => b + s.tasks.length, 0), 0)} Tasks
+      </div>
+    `, delay);
+    delay += 120;
+
+    data.features.forEach(feat => {
+      const featBranch = document.createElement('div');
+      featBranch.className = 'tree-branch';
+      tree.appendChild(featBranch);
+
+      addItem(featBranch, `
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">
+          <span class="label label-feature">Feature #${feat.id}</span>
+          <span class="tree-title">${feat.title}</span>
+        </div>
+      `, delay);
+      delay += 100;
+
+      feat.stories.forEach(story => {
+        const storyBranch = document.createElement('div');
+        storyBranch.className = 'tree-branch';
+        featBranch.appendChild(storyBranch);
+
+        addItem(storyBranch, `
+          <div style="display:flex;align-items:flex-start;gap:8px;margin-bottom:4px;flex-wrap:wrap">
+            <span class="label label-story">Story #${story.id}</span>
+            <span class="tree-title" style="font-size:0.82rem">${story.title}</span>
+            <span class="tree-meta">&nbsp;${story.points} pts</span>
+          </div>
+        `, delay);
+        delay += 80;
+
+        const taskBranch = document.createElement('div');
+        taskBranch.className = 'tree-branch';
+        storyBranch.appendChild(taskBranch);
+
+        story.tasks.forEach((t, i) => {
+          addItem(taskBranch, `
+            <span class="label label-task">Task</span>
+            <span class="tree-meta" style="margin-left:6px">${t}</span>
+          `, delay);
+          delay += 60;
+        });
+
+        story.qa.forEach(q => {
+          addItem(taskBranch, `
+            <span class="label label-qa">QA</span>
+            <span class="tree-meta" style="margin-left:6px">${q}</span>
+          `, delay);
+          delay += 50;
+        });
+
+        addItem(taskBranch, `
+          <span class="label label-github">Branch</span>
+          <code style="font-size:0.78rem;margin-left:6px;color:var(--accent)">${story.branch}</code>
+          <span class="tree-meta" style="margin-left:6px">→ Draft PR</span>
+        `, delay);
+        delay += 60;
+      });
+    });
+
+    container.appendChild(tree);
+  }
+</script>
+</body>
+</html>
